@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'          # 推送 v 開頭的 tag（例如 v1.2）時觸發
+
+permissions:
+  contents: write     # 建立 Release 需要寫入權限
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build -ldflags "-H windowsgui" -o KeepAwake.exe
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$env:GITHUB_REF_NAME"
+          KeepAwake.exe
+          --title "$env:GITHUB_REF_NAME"
+          --generate-notes
